@@ -1,0 +1,29 @@
+# EXPERIMENT 5 REPORT: THE SUMMING AMPLIFIER (AUDIO MIXER)
+
+1. OVERVIEW AND PURPOSE
+In Experiment 4, the raw audio was successfully split and filtered into two completely isolated parallel channels: a low-frequency band (156.25 Hz) and a high-frequency band (625 Hz). However, the Pulse Width Modulator (PWM) built in Experiment 2 only has one audio input pin.
+The purpose of Experiment 5 is to build a Summing Amplifier. This stage acts as an analog audio mixer. Its job is to take the isolated signals from both filter channels, mathematically add them together into a single, complex composite waveform, and properly bias that waveform with a DC offset so it is ready to be digitized by the comparator.
+
+2. SYSTEM ARCHITECTURE
+The circuit utilizes an Inverting Summing Amplifier topology constructed around a single Operational Amplifier.
+Because we want to smoothly combine the signals without artificially amplifying or distorting them, the circuit is designed for a strict Unity Gain (a gain ratio of 1:1).
+•	The Input Resistors (R_IN1 and R_IN2): A 10 kΩ resistor is connected to the output of the 156 Hz filter, and another 10 kΩ resistor is connected to the output of the 625 Hz filter. Both of these feed directly into the inverting (-) terminal of the op-amp.
+•	The Feedback Resistor (R_F): A 10 kΩ resistor connects the output of the op-amp back to its inverting (-) terminal.
+
+3. MATHEMATICAL DERIVATIONS (THE ADDER)
+The fundamental equation for an inverting summing amplifier is defined by the ratio of the feedback resistor to the input resistors.
+V_OUT = - [ (R_F / R_IN1) * V_FILTER1 + (R_F / R_IN2) * V_FILTER2 ]
+Because we selected 10 kΩ for all three resistors (R_F = R_IN1 = R_IN2 = 10 kΩ), the ratios simplify to exactly 1. V_OUT = - [ (1) * V_FILTER1 + (1) * V_FILTER2 ] V_OUT = - (V_FILTER1 + V_FILTER2)
+The Phase Inversion: Notice the negative sign at the front of the equation. Because this is an inverting topology, the final combined audio wave is flipped upside down (a 180-degree phase shift). In acoustic audio engineering, flipping the phase of a continuous waveform is completely imperceptible to the human ear, making this inversion perfectly acceptable.
+
+4. THE COMMON-MODE DC BIAS (V_CM)
+Because the entire Class-D amplifier is powered by a single-supply 0V to 5V rail (rather than a dual +15V/-15V supply), an AC audio wave cannot physically swing below 0 Volts. If it tries to drop below 0V, the bottom half of the sound wave will be violently chopped off against the ground rail (clipping).
+To solve this, the non-inverting (+) terminal of the summing op-amp is NOT connected to Ground. Instead, it is connected to a 2.5 Volt reference voltage (V_CM).
+•	This physically pulls the entire audio signal upward, forcing it to "float" on a 2.5V DC baseline.
+•	A 1.0 Volt peak-to-peak audio wave will now safely swing between 2.0V and 3.0V, perfectly matching the voltage window of the Ramp Generator from Experiment 1.
+
+5. HARDWARE VERIFICATION (THE COMPOSITE WAVE)
+When feeding both 156.25 Hz and 625 Hz tones into the system simultaneously, the oscilloscope probe at the output of the summing amplifier reveals a complex, "wobbly" composite wave.
+•	The trace displays a large, slow rolling envelope (the 156 Hz wave).
+•	Riding continuously along the crests and troughs of that slow wave are exactly 4 smaller, rapid spikes (the 625 Hz wave).
+•	The average DC voltage of this combined waveform rests flawlessly at 2.5 Volts, proving the AC signal is successfully summing and biasing simultaneously.
