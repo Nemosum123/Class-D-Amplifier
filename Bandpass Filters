@@ -1,0 +1,42 @@
+# EXPERIMENT 4 REPORT: ACTIVE BANDPASS FILTERS (MULTIPLE FEEDBACK TOPOLOGY)
+
+1. OVERVIEW AND PURPOSE
+In a high-fidelity Class-D amplifier, feeding raw, unfiltered audio directly into the PWM modulator is highly inefficient. High-frequency electrical noise or out-of-band signals can cause the H-Bridge to switch unnecessarily, generating excess heat and intermodulation distortion.
+The purpose of Experiment 4 is to build the analog processing "frontend" of the amplifier. Specifically, you are constructing two parallel Active Bandpass Filters. A bandpass filter allows a highly specific "window" of frequencies to pass through at full volume while aggressively blocking any frequencies that are too high or too low.
+By building two separate filter channels—one tuned to 156.25 Hz (Low Tone) and one tuned to 625 Hz (High Tone)—the system can cleanly isolate the desired audio targets and reject all surrounding electrical noise before modulation occurs.
+
+2. SYSTEM ARCHITECTURE: THE MFB TOPOLOGY
+To achieve a high degree of frequency precision without using bulky physical inductors, this circuit utilizes an active-RC design known as the Multiple Feedback (MFB) Bandpass Filter.
+The MFB topology is constructed using a single Operational Amplifier (Op-Amp) surrounded by two capacitors and three resistors.
+•	The Capacitors (C1 and C2): These are set to equal values (C1 = C2 = C) to simplify the math and establish the baseline frequency range.
+•	The Resistors (R1, R2, R3): R1 (Input), R2 (Ground), and R3 (Feedback) interact with the capacitors to precisely lock in three critical filter parameters:
+1.	Center Frequency (f0): The exact target frequency the filter is tuned to pass.
+2.	Quality Factor (Q): The "sharpness" of the filter. A high Q-factor (e.g., Q = 10) means the filter is highly selective and creates a narrow, sharp peak.
+3.	Passband Gain (|A0|): The volume of the signal as it passes through the filter. For this stage, a unity gain of 1 (0 dB) is targeted so the signal is not artificially amplified before the summing stage.
+
+3. MATHEMATICAL DERIVATIONS AND DESIGN EQUATIONS
+The transfer function of the MFB bandpass filter yields three primary design equations. Assuming both capacitors are equal (C), we can calculate the exact resistor values required to hit our desired f0, Q, and |A0| targets.
+1.	Calculating the Feedback Resistor (R3): The feedback resistor primarily dictates the Quality Factor (Q) of the filter. R3 = Q / (pi * f0 * C)
+2.	Calculating the Input Resistor (R1): The input resistor is calculated based on the desired mid-band gain (|A0|). For a gain of exactly 1 (0 dB), R1 is simply half the value of R3. R1 = R3 / (2 * |A0|)
+3.	Calculating the Ground Resistor (R2): The ground resistor fine-tunes the center frequency (f0) without altering the gain. R2 = Q / [2 * pi * f0 * C * (2*Q^2 - |A0|)]
+
+4. COMPONENT CALCULATIONS AND IMPLEMENTATION
+The system requires two distinct filter channels operating on a 0V to 5V single-supply rail. Because it is a single-supply system, the non-inverting terminal of both op-amps must be tied to a 2.5V Common-Mode DC Bias (V_CM) to prevent the audio from clipping against the ground rail.
+Standard 100 nF capacitors (C = 0.1 uF) are chosen for both channels. The target specifications are a Q-factor of 10 and a Gain of 1.
+Channel A: The 156.25 Hz Filter (Low Band)
+Plugging f0 = 156.25 Hz, Q = 10, |A0| = 1, and C = 100 nF into the design equations yields the following theoretical resistor values:
+•	R3 (Feedback): 10 / (3.1415 * 156.25 * 0.0000001) = 203 kΩ -> (Standard Breadboard Value used: 200 kΩ)
+•	R1 (Input): 200 kΩ / 2 = 100 kΩ -> (Standard Breadboard Value used: 100 kΩ)
+•	R2 (Ground): 10 / [2 * 3.1415 * 156.25 * 0.0000001 * (2*100 - 1)] = 508 Ω -> (Standard Breadboard Value used: 500 Ω)
+Channel B: The 625 Hz Filter (High Band)
+Plugging f0 = 625 Hz, Q = 10, |A0| = 1, and C = 100 nF into the design equations yields:
+•	R3 (Feedback): 10 / (3.1415 * 625 * 0.0000001) = 50.9 kΩ -> (Constructed using 47 kΩ + 6.8 kΩ in series = 53.8 kΩ)
+•	R1 (Input): 53.8 kΩ / 2 = 26.9 kΩ -> (Constructed using two 47 kΩ in parallel + 3.3 kΩ in series = 26.8 kΩ)
+•	R2 (Ground): 10 / [2 * 3.1415 * 625 * 0.0000001 * 199] = 127 Ω -> (Standard Breadboard Value used: 120 Ω)
+
+5. HARDWARE VERIFICATION (FREQUENCY SWEEP)
+To verify the physical hardware matches the mathematical theory, a Frequency Response Sweep (Bode Plot) is performed using an oscilloscope and a waveform generator.
+1.	The Test: A constant 1.0 Volt peak-to-peak sine wave is injected into the filter's input, and the frequency is continuously swept from 20 Hz to 2,000 Hz.
+2.	The Result: The oscilloscope trace maps a sharp, bell-shaped magnitude curve.
+3.	The Proof: For Channel A, the output amplitude peaks perfectly at 156.25 Hz, matching the 1.0V input (proving the Gain = 1). As the frequency generator sweeps below 100 Hz or above 200 Hz, the output amplitude collapses toward 0 Volts, physically proving the filter is successfully rejecting out-of-band noise.
+
