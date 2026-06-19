@@ -1,0 +1,17 @@
+# EXPERIMENT 3 REPORT: DEAD-TIME LOGIC AND H-BRIDGE SWITCHING
+
+1. OVERVIEW AND PURPOSE
+In the previous experiments, the system successfully translated analog audio into a low-power digital Pulse Width Modulated (PWM) signal. However, operational amplifiers and logic comparators can only output a few milliamps of current—nowhere near enough power to physically move the heavy magnetic cone of an 8-ohm speaker.
+The purpose of Experiment 3 is to build the "muscle" of the Class-D amplifier. This involves constructing an H-Bridge switching network capable of delivering massive, high-speed current to the load. Furthermore, because high-power switching is inherently dangerous to the physical silicon components, a logic-based "Dead-Time Generator" and Buffer stage must be designed to safely direct the digital signals into the transistors without causing electrical short circuits.
+
+2. THE H-BRIDGE ARCHITECTURE (THE MUSCLE)
+An H-Bridge is a specific arrangement of four bipolar junction transistors (BJTs) that allows a circuit to reverse the direction of current flowing through a central load (the speaker).
+•	The Top Transistors (Push): Two 2N2907 PNP transistors connect the left and right sides of the speaker to the 5.0V power supply rail.
+•	The Bottom Transistors (Pull): Two 2N2222 NPN transistors connect the left and right sides of the speaker to the Ground rail (0.0V).
+The Differential Switching Action
+
+The H-Bridge operates diagonally.
+•	State 1 (Positive Current): The Top-Left PNP turns ON, and the Bottom-Right NPN turns ON. Current flows from 5V, enters the left side of the speaker, exits the right side, and drains to Ground.
+•	State 2 (Negative Current): The Top-Right PNP turns ON, and the Bottom-Left NPN turns ON. Current flows from 5V, enters the right side of the speaker, exits the left side, and drains to Ground.
+•	The Result: Even though the circuit is powered by a single 0V to 5V supply, the speaker physically "feels" the voltage swinging from +5V to -5V, effectively doubling the voltage headroom and delivering significantly more audio power.
+
