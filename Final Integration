@@ -1,0 +1,28 @@
+EXPERIMENT 6 REPORT: TOP-LEVEL SYSTEM INTEGRATION
+
+1. OVERVIEW AND PURPOSE
+Experiment 6 is the final culmination of the Class-D Amplifier project. In this stage, all individual modules—the analog filters, the summing mixer, the ramp generator, the PWM modulator, the dead-time logic, and the H-Bridge—are physically wired together into a single, closed-loop system.
+The primary objective is to verify that the signal handoffs between the low-voltage analog "brain" and the high-voltage switching "muscle" function without causing mathematical overmodulation or electrical shoot-through, ultimately driving a physical 8-ohm acoustic speaker.
+
+2. THE MASTER SIGNAL FLOW
+The physical integration follows a strict sequential path:
+1.	The Source: The raw audio tones enter the parallel bandpass filters.
+2.	The Frontend: The filters isolate the frequencies, and the Summing Amplifier mixes them together, floating them on a 2.5V DC bias.
+3.	The Modulator: The analog audio is fed into the Comparator and mathematically sliced against the 5 kHz Triangle Wave, outputting a high-frequency digital PWM square wave.
+4.	The Logic: The PWM signal enters the Dead-Time Generator, which splits the signal and inserts microsecond RC delays to ensure the Top and Bottom transistors never turn on simultaneously.
+5.	The Driver: The CD4069 Inverter Buffer steps up the current to 20 mA to forcefully snap the H-Bridge bases open.
+6.	The Load: The H-Bridge amplifies the signal to high current, driving the magnetic coil of the speaker.
+
+3. OVERMODULATION DIAGNOSIS AND CORRECTION
+The most critical failure point during system integration is Comparator Overmodulation (PWM Clipping).
+During the initial link between the Summing Amplifier and the Modulator, the oscilloscope often displays a PWM signal with massive gaps or unbroken flatlines holding at 5V or 0V. This indicates that the analog audio wave is physically exceeding the boundaries of the triangle wave.
+The Fix (The Overlay Test): By overlaying both the Audio wave (Channel 1) and Triangle wave (Channel 2) on the oscilloscope screen, two physical corrections are made:
+1.	Bias Alignment: The V_CM potentiometer on the audio frontend is adjusted until the audio wave is perfectly centered vertically over the 2.5V midpoint of the triangle wave.
+2.	Amplitude Tuning: The input volume is reduced until the maximum peaks of the audio wave sit safely inside the 2.0V to 3.0V boundaries of the triangle wave. Once corrected, the output of the comparator yields a solid, continuous block of PWM pulses whose widths smoothly "breathe" in time with the audio frequencies.
+
+4. THE FINAL ACOUSTIC LOAD
+With the logic and timing fully verified, the physical speaker is attached. Because the H-Bridge transistors possess a strict maximum thermal current limit, driving a raw 8-ohm speaker directly from a 5V supply could draw upwards of 625 mA, potentially overheating the standard 2N2222/2N2907 discrete silicon.
+To ensure thermal safety during testing, a 20-ohm resistive padding (constructed of two 10-ohm resistors) is placed in series with the 8-ohm speaker.
+•	Total Load = 28 Ohms.
+•	Maximum Current Draw = 5V / 28 Ohms = 178 mA. This keeps the transistors well within their safe operating area while still providing enough acoustic energy to easily hear the 156.25 Hz and 625 Hz mixed tones radiating clearly from the speaker cone. The physical inductance of the speaker acts as a mechanical low-pass filter, ignoring the 5 kHz PWM switching speed and only vibrating to recreate the original analog audio.
+
