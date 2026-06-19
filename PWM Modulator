@@ -1,0 +1,41 @@
+# EXPERIMENT 2 REPORT: THE PWM MODULATOR
+
+1. OVERVIEW AND PURPOSE
+In the architecture of a Class-D amplifier, the system cannot amplify a smooth, continuous analog audio wave directly. Instead, it must first convert that analog audio into a high-frequency digital format that can rapidly turn heavy-duty power transistors completely ON or completely OFF.
+The purpose of Experiment 2 is to build the Pulse Width Modulator (PWM). This stage acts as the primary Analog-to-Digital translator of the amplifier. It takes the slow, complex analog audio signal from the frontend filters and compares it against the high-speed triangle wave (generated in Experiment 1) to create a continuous digital square wave whose pulse widths perfectly encode the original audio.
+
+2. SYSTEM ARCHITECTURE
+The PWM Modulator is remarkably simple in its physical construction, consisting primarily of a single active component: a High-Speed Voltage Comparator (such as an LM339 or similar chip).
+Unlike an operational amplifier which tries to balance its inputs, a comparator is designed to be highly unstable. It acts as a strict, high-speed mathematical logic gate that constantly evaluates two voltages against each other and outputs a binary absolute: 0 Volts (LOW) or 5 Volts (HIGH).
+The Physical Connections:
+•	The Non-Inverting Input (V+): This pin receives the smooth, analog audio signal (V_AUDIO) coming from the summing amplifier stage.
+•	The Inverting Input (V-): This pin receives the continuous 5 kHz triangle wave (V_RAMP) coming from the Ramp Generator.
+•	The Output (V_PWM): This pin outputs the resulting high-frequency digital square wave.
+
+3. THE PHYSICS OF MODULATION (HOW IT WORKS)
+The comparator creates the PWM signal by acting as a continuous, high-speed voltage slicer. It continuously asks one mathematical question: "Is the audio voltage physically higher than the triangle wave voltage right now?"
+The logic follows two strict rules:
+1.	If V_AUDIO > V_RAMP, the output snaps to 5.0V (HIGH).
+2.	If V_AUDIO < V_RAMP, the output snaps to 0.0V (LOW).
+Encoding the Audio Shape:
+Because the triangle wave is oscillating at a very fast 5 kHz, it acts like a rapid scanning laser, sweeping up and down across the audio wave thousands of times per second.
+•	At the Audio Peak: When the sound wave swells to its maximum volume, its voltage is physically very high. Therefore, it spends almost the entire switching cycle sitting vertically "above" the triangle wave. The comparator outputs a HIGH signal for a very long duration, creating a very WIDE digital pulse (a high duty cycle).
+•	At the Audio Trough: When the sound wave dips to its lowest point, it spends almost the entire cycle sitting "below" the triangle wave. The comparator outputs a LOW signal, resulting in a very NARROW digital pulse (a low duty cycle).
+•	At Absolute Silence: If no audio is playing, the audio line sits perfectly flat at the center of the triangle wave. The comparator spends exactly half its time above the triangle wave and half its time below it, resulting in a perfect 50% duty cycle square wave.
+
+4. VOLTAGE CONSTRAINTS AND OVERMODULATION
+For this mathematical slicing to work without destroying the audio, two strict physical voltage constraints must be met at the input pins.
+Constraint A: The Common-Mode Bias (V_CM) Match
+Both the Audio Wave and the Triangle Wave must be perfectly centered on the exact same DC resting voltage (V_CM).
+•	In Experiment 1, the triangle wave was designed to oscillate between 2.0V and 3.0V, meaning its center point is exactly 2.5V.
+•	Therefore, the audio signal leaving the frontend filters MUST also be biased to float at exactly 2.5V. If the audio is biased at 3.5V, it will sit completely outside the triangle wave's scanning window, and the comparator will permanently lock up.
+Constraint B: The Amplitude Limit (Preventing Clipping)
+The peak-to-peak voltage height of the audio signal must never exceed the peak-to-peak voltage height of the triangle wave.
+•	V_AUDIO(pp) < V_RAMP(pp)
+•	Because the triangle wave is exactly 1.0V peak-to-peak (from 2.0V to 3.0V), the absolute maximum volume of the incoming audio wave must be strictly less than 1.0V peak-to-peak.
+•	Overmodulation: If the user turns the volume up too high (e.g., a 2.0V peak-to-peak audio wave), the peaks and valleys of the audio will physically poke out of the top and bottom of the triangle wave boundary. When the audio exceeds the triangle wave, the comparator stops switching and outputs a solid, unbroken block of 5V or 0V. This completely destroys the encoded sound, creating harsh, physical distortion known as clipping.
+
+5. COMPONENT IMPLEMENTATION
+To successfully build this stage on the breadboard:
+1.	The Comparator Chip: A standard op-amp is usually too slow to snap between 0V and 5V at 5 kHz cleanly, resulting in slanted or rounded square waves. A dedicated high-speed comparator (like the LM339) must be used to ensure sharp, vertical digital edges.
+2.	The Output Pull-Up Resistor: Just like the Schmitt Trigger in Experiment 1, the LM339 features an open-collector output. The internal silicon can only sink current to Ground; it cannot source current from the 5V rail. Therefore, a pull-up resistor (typically 1 kΩ to 3.3 kΩ) must be connected between the comparator's output pin and the 5V power supply to force the signal HIGH when the internal transistor turns off.
