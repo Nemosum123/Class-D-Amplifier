@@ -1,0 +1,33 @@
+# EXPERIMENT 1 REPORT: THE RAMP GENERATOR (TRIANGLE WAVE OSCILLATOR)
+
+1. OVERVIEW AND PURPOSE
+In this lab, a full Class-D amplifier system is constructed from scratch using discrete operational amplifiers, comparators, and H-bridge switching networks. Experiment 1 serves as the fundamental timing baseline—or the beating heart—of the entire amplification loop.
+The primary objective of this stage is to construct a standalone Ramp Generator (Triangle Wave Oscillator). The circuit is designed to deliver a continuous, highly stable, high-frequency (5 kHz) triangle wave output. This triangle wave acts as an internal reference standard—or geometric "ruler"—which subsequent modulation stages use to mathematically slice an incoming analog audio signal into a binary Pulse Width Modulated (PWM) digital square wave.
+
+2. SYSTEM ARCHITECTURE & BLOCK DIAGRAM
+The Ramp Generator topology consists of two distinct active sub-circuits interconnected in a continuous, closed feedback loop:
+1.	Stage 1 (OPA1): An Inverting Operational Amplifier RC Integrator.
+2.	Stage 2 (CMP1): A Non-Inverting Voltage Comparator configured with positive feedback to create an open-collector Schmitt Trigger.
+
+The Closed-Loop Mechanism of Action
+The two active blocks maintain constant oscillation by driving each other through an ongoing electrical tug-of-war:
+•	The Integrator (OPA1): The integrator stage functions as a linear slope builder. It accepts a flat, constant DC voltage at its input and converts it into a uniform voltage ramp over time by charging or discharging a feedback capacitor (C1). Because it uses an inverting configuration, its output moves in the opposite direction of its input: injecting a flat positive voltage causes the output voltage to ramp down linearly, while injecting a zero-volt line causes it to ramp up linearly.
+•	The Schmitt Trigger (CMP1): The comparator functions as the digital decision maker. Configured with a positive feedback loop, it exhibits electrical hysteresis, meaning it possesses two separate input voltage trip points rather than a single threshold. In this specific design, it is programmed with an Upper Threshold of exactly 3.0 Volts and a Lower Threshold of exactly 2.0 Volts.
+
+•	The Continuous Loop Cycle:
+1.	When the Schmitt Trigger's output sits at 0 Volts (LOW), the inverting integrator reacts to this low input by steadily charging its feedback capacitor, causing the circuit's output voltage (V_RAMP) to climb upward.
+2.	The voltage climbs smoothly up through 2.6V, 2.7V, 2.8V, and 2.9V until it hits the exact Upper Threshold of 3.0 Volts.
+3.	The moment V_RAMP reaches 3.0V, the Schmitt Trigger trips and instantly snaps its output up to the full positive rail of 5.0 Volts (HIGH).
+4.	Because the integrator input has suddenly changed to a high 5.0V signal, the inverting network reverses its behavior, draining the feedback capacitor and forcing the output voltage to ramp downward linearly.
+5.	The voltage falls steadily past 2.5V, 2.4V, and 2.3V until it reaches the exact Lower Threshold of 2.0 Volts.
+6.	The moment V_RAMP reaches 2.0V, the Schmitt Trigger senses the lower threshold boundary and instantly snaps its output back down to 0 Volts (LOW).
+7.	The cycle resets and repeats indefinitely, translating flat DC power into continuous AC waveforms.
+This ongoing loop produces a highly linear, perfectly symmetrical 1.0 Volt peak-to-peak triangle wave that bounces continuously between 2.0 Volts and 3.0 Volts, locked to a center frequency of 5 kHz. 
+
+3. COMPONENT CALCULATIONS AND IMPLEMENTATION
+To fulfill the operational parameters required by the lab manual (a 5.0V main supply, a 1.0V peak-to-peak triangle wave, and a 5.0 kHz target oscillation frequency):
+1.	The Bias Reference Generator: The common-mode voltage center point must sit exactly at V_CM = 2.5 Volts. This is constructed on the breadboard using a low-noise voltage divider featuring two identical resistors (two standard 47 kΩ units are implemented to significantly lower idle current draw).
+2.	The Schmitt Trigger Resistor Network: To guarantee a tight 1.0V output amplitude window, the fraction ratio of R2 / R3 must evaluate to exactly 0.2. This mandates that the feedback resistor must measure exactly 5 times larger than the input coupling resistor. To achieve this utilizing standard stock parts, a series pair of 33 kΩ + 6.8 kΩ resistors is combined to form an input value of 39.8 kΩ, while two 100 kΩ resistors are wired in series to establish a feedback loop of 200 kΩ.
+3.	The Integrator Time Constant: To establish the baseline 5 kHz clock rate, a highly stable standard 10 nF ceramic disc capacitor is selected for C1. Rearranging the frequency transfer equation with our chosen component values yields an ideal target resistance of 25 kΩ for R1. This is constructed on the board by wiring a 33 kΩ resistor in parallel with a 100 kΩ resistor, yielding a real-world value of 24.8 kΩ (99.2% mathematical accuracy).
+4.	The Output Pull-Up Resistor: The LM339 integrated circuit chosen for the Schmitt trigger features an open-collector output transistor architecture. Because this internal silicon switch can only pull a signal down to Ground, it is completely incapable of sourcing current to push a node HIGH on its own. Therefore, a physical 3.3 kΩ pull-up resistor must be connected directly between the comparator's output pin and the 5V power rail to ensure clean, vertical, high-speed rising edges on the square wave.
+
